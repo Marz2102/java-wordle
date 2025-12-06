@@ -22,7 +22,9 @@ public class WordleDictionaryLoader {
 
             while (bufferedReader.ready()) {
                 String word = bufferedReader.readLine().toLowerCase().replaceAll("ё", "е");
-                words.add(word);
+                if (word.length() == 5) {
+                    words.add(word);
+                }
             }
         } catch (FileNotFoundException e) {
             Files.writeString(logFile, "Файла не существует");
@@ -30,6 +32,7 @@ public class WordleDictionaryLoader {
             Files.writeString(logFile, "Ошибка при чтении файла");
         }
 
+        Files.writeString(logFile, TimeLog.getDateTime() + ": Словарь успешно загружен", StandardCharsets.UTF_8);
         return new WordleDictionary(words);
     }
 }
