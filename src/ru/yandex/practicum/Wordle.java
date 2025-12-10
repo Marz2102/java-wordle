@@ -1,13 +1,8 @@
 package ru.yandex.practicum;
 
-import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -21,53 +16,52 @@ import java.util.Scanner;
     вывести состояние игры и конечный результат
  */
 public class Wordle {
-    private static Path logFile;
-    private static String fileName = "words_ru.txt";
+    private static String logFile = "logFile";
+    private static final String fileName = "words_ru.txt";
 
-    public static void main(String[] args) throws IOException {
-        try {
-            logFile = Paths.get("logFile");
-            if (!Files.exists(logFile)) {
-                Files.createFile(logFile);
-            } else {
-                Files.write(logFile, new byte[0]); // Очищаем файл логирования перед запуском игры
-            }
-        } catch (IOException e) {
-            System.out.println("Ошибка создания файла логирования");
-            return;
-        }
+    public static void main(String[] args) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(logFile, false))) {
 
-        WordleDictionary wordleDictionary = WordleDictionaryLoader.loadWordleDictionary(fileName, logFile);
-        WordleGame game = new WordleGame(wordleDictionary);
-        Scanner scanner = new Scanner(System.in);
+            WordleDictionary wordleDictionary = WordleDictionaryLoader.loadWordleDictionary(fileName, writer);
+            WordleGame game = new WordleGame(wordleDictionary);
+            Scanner scanner = new Scanner(System.in);
 
-        Files.writeString(logFile, TimeLog.getDateTime() + ": Игра началась", StandardCharsets.UTF_8);
+            writer.println(TimeLog.getDateTime() + ": Игра началась. Попыток осталось: " + game.getSteps());
 
-        while (true) {
-            if (game.getSteps() == 0) {
-                System.out.println("У вас закончились попытки");
-                break;
-            }
+            while (true) {
+                if (game.getSteps() == 0) {
+                    System.out.println("У вас закончились попытки. Правильный ответ: " + game.getAnswer());
+                    writer.println(TimeLog.getDateTime() + ": Правильный ответ: " + game.getAnswer());
+                    break;
+                }
 
-            System.out.println("У вас осталось " + game.getSteps() + " попыток, введите русское слово длины 5");
-            String word = scanner.nextLine().toLowerCase().replaceAll("ё", "е").trim();
+                String word = scanner.nextLine().toLowerCase().replaceAll("ё", "е").trim();
 
-            if (!game.checkWord(word)) {
-                System.out.println("Введено некорректное слово, попробуйте еще раз");
-            } else {
+                try {
+                    game.checkWord(word);
+                } catch (WordNotFoundInDictionary e) {
+                    writer.println(TimeLog.getDateTime() + ": " + e.getMessage() + ". Попыток осталось: " + game.getSteps());
+                    System.out.println(e.getMessage());
+                    continue;
+                }
+
                 if (Objects.equals(word, game.getAnswer())) {
-                    Files.writeString(logFile, TimeLog.getDateTime() + ": Игрок отгадал слово", StandardCharsets.UTF_8);
+                    writer.println(TimeLog.getDateTime() + ": Игрок отгадал слово: " + word);
                     break;
                 }
 
                 if (word.isEmpty()) {
                     System.out.println(game.getHint());
+                    writer.println(TimeLog.getDateTime() + ": Игрок запросил подсказку. Попыток осталось: " + game.getSteps());
                     continue;
                 }
 
-                game.handleNewWord(word);
+                String out = game.handleNewWord(word);
+                System.out.println(out);
+                writer.println(TimeLog.getDateTime() + ": Игрок предложил вариант " + word + ". Попыток осталось: " + game.getSteps());
             }
-
+        } catch (IOException e) {
+            System.out.println("Ошибка создания файла логирования");
         }
     }
 }

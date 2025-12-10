@@ -18,8 +18,9 @@ public class WordleGame {
     private final String answer;
     private int steps = 6;
     private final WordleDictionary dictionary;
-    private final Map<Character, Integer> letters = new LinkedHashMap<>(); //мапа с кол-вом повторений букв
+    private final Map<Character, Integer> letters = new LinkedHashMap<>(); //мапа с присутствующими буквами в слове
     private final List<Character> wordsPosition = new ArrayList<>(Collections.nCopies(5, null)); //массив, запоминающий верно угаданные позиции
+    private final Set<String> hints = new HashSet<>();
 
     public WordleGame(WordleDictionary dictionary) {
         this.dictionary = dictionary;
@@ -34,25 +35,72 @@ public class WordleGame {
         return answer;
     }
 
-    public boolean checkWord(String word) {
+    public void checkWord(String word) throws WordNotFoundInDictionary {
+        if (word.isEmpty()) {
+            return;
+        }
+
+        if (!dictionary.contains(word)) {
+            throw new WordNotFoundInDictionary();
+        }
+
         for (int i = 0; i < word.length(); i++) {
             if (!(word.charAt(i) >= 'a' && word.charAt(i) <= 'я')) {
-                return false;
+                throw new WordNotFoundInDictionary();
             }
         }
-        return (word.length() == answer.length() || word.isEmpty());
+        if (word.length() != answer.length()) {
+            throw new WordNotFoundInDictionary();
+        }
     }
 
     public String getHint() {
-        --steps;
+        decrementSteps();
         if (letters.isEmpty()) {
             return dictionary.getRandomWord();
         }
-        return dictionary.getWordByLetters(letters, wordsPosition);
+        return dictionary.getWordByLetters(letters, wordsPosition, hints);
     }
 
     public String handleNewWord(String word) {
-        String out = "";
+        decrementSteps();
+        updateWordsPosition(word);
+        updateLettersMap(word);
+
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < word.length(); ++i) {
+            if (word.charAt(i) == answer.charAt(i)) {
+                out.append("+");
+            } else if (answer.indexOf(word.charAt(i)) == -1) {
+                out.append("-");
+            } else {
+                out.append("^");
+            }
+        }
+
+        return out.toString();
+    }
+
+    private void updateWordsPosition(String word) {
+        for (int i = 0; i < word.length(); ++i) {
+            if (word.charAt(i) == answer.charAt(i)) {
+                wordsPosition.set(i, word.charAt(i));
+            }
+        }
+    }
+
+    private void updateLettersMap(String word) {
+        for (int i = 0; i < word.length(); ++i) {
+            if (answer.indexOf(word.charAt(i)) != -1) {
+                letters.put(word.charAt(i), 1);
+            } else {
+                letters.put(word.charAt(i), 0);
+            }
+        }
+    }
+
+    private void decrementSteps() {
+        --steps;
     }
 
 }

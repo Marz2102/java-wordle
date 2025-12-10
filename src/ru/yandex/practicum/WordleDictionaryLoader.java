@@ -2,8 +2,6 @@ package ru.yandex.practicum;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +12,7 @@ import java.util.List;
  */
 public class WordleDictionaryLoader {
 
-    public static WordleDictionary loadWordleDictionary(String fileName, Path logFile) throws IOException {
+    public static WordleDictionary loadWordleDictionary(String fileName, PrintWriter writer) throws IOException {
         List<String> words = new ArrayList<>();
 
         try (FileReader reader = new FileReader(fileName, StandardCharsets.UTF_8);
@@ -27,12 +25,12 @@ public class WordleDictionaryLoader {
                 }
             }
         } catch (FileNotFoundException e) {
-            Files.writeString(logFile, "Файла не существует");
+            writer.write(TimeLog.getDateTime() + "Файла не существует");
         } catch (IOException e) {
-            Files.writeString(logFile, "Ошибка при чтении файла");
+            writer.write(TimeLog.getDateTime() + "Ошибка при чтении файла");
         }
 
-        Files.writeString(logFile, TimeLog.getDateTime() + ": Словарь успешно загружен", StandardCharsets.UTF_8);
+        writer.println(TimeLog.getDateTime() + ": Словарь успешно загружен");
         return new WordleDictionary(words);
     }
 }

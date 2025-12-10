@@ -10,9 +10,11 @@ import java.util.*;
 public class WordleDictionary {
     private final Random rand = new Random();
     private final List<String> words;
+    private final Set<String> allWords = new HashSet<>();
 
     public WordleDictionary(List<String> words) {
         this.words = words;
+        this.allWords.addAll(words);
     }
 
     public List<String> getWords() {
@@ -23,18 +25,23 @@ public class WordleDictionary {
         return words.get(rand.nextInt(words.size()));
     }
 
-    public String getWordByLetters(Map<Character, Integer> letters, List<Character> wordsPosition) {
+    public boolean contains(String word) {
+        return allWords.contains(word);
+    }
+
+    public String getWordByLetters(Map<Character, Integer> letters, List<Character> wordsPosition, Set<String> hints) {
         for (String word : words) {
-            if (checkTotalLetters(letters, word) && checkLettersPosition(wordsPosition, word)) {
+            if (checkTotalLetters(letters, word) && checkLettersPosition(wordsPosition, word) && !hints.contains(word)) {
+                hints.add(word);
                 return word;
             }
         }
         return null;
     }
 
-    private boolean checkLettersPosition(List<Character> wordsPosisiton, String word) {
-        for (int i = 0; i < wordsPosisiton.size(); ++i) {
-            if (wordsPosisiton.get(i) != null && wordsPosisiton.get(i) != word.charAt(i)) {
+    private boolean checkLettersPosition(List<Character> wordsPosition, String word) {
+        for (int i = 0; i < wordsPosition.size(); ++i) {
+            if (wordsPosition.get(i) != null && wordsPosition.get(i) != word.charAt(i)) {
                 return false;
             }
         }
@@ -51,12 +58,7 @@ public class WordleDictionary {
             if (newLetters.get(c) == null && letters.get(c) > 0) {
                 return false;
             }
-
             if (letters.get(c) == 0 && newLetters.containsKey(c)) {
-                return false;
-            }
-
-            if (newLetters.containsKey(c) && newLetters.get(c) < letters.get(c)) {
                 return false;
             }
         }
