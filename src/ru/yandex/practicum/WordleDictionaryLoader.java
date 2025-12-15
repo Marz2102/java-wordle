@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class WordleDictionaryLoader {
 
-    public static WordleDictionary loadWordleDictionary(String fileName, PrintWriter writer) throws IOException {
+    public static WordleDictionary loadWordleDictionary(String fileName, PrintWriter writer) throws EmptyDictionaryException {
         List<String> words = new ArrayList<>();
 
         try (FileReader reader = new FileReader(fileName, StandardCharsets.UTF_8);
@@ -28,6 +28,11 @@ public class WordleDictionaryLoader {
             writer.write(TimeLog.getDateTime() + "Файла не существует");
         } catch (IOException e) {
             writer.write(TimeLog.getDateTime() + "Ошибка при чтении файла");
+        }
+
+        if (words.isEmpty()) {
+            writer.write(TimeLog.getDateTime() + ": Ошибка загрузки словаря");
+            throw new EmptyDictionaryException(); //Если словарь пуст, кидаем исключение в мейн
         }
 
         writer.println(TimeLog.getDateTime() + ": Словарь успешно загружен");

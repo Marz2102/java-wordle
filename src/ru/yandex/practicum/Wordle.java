@@ -16,7 +16,7 @@ import java.util.Scanner;
     вывести состояние игры и конечный результат
  */
 public class Wordle {
-    private static String logFile = "logFile";
+    private static String logFile = "logFile.txt";
     private static final String fileName = "words_ru.txt";
 
     public static void main(String[] args) {
@@ -47,11 +47,18 @@ public class Wordle {
 
                 if (Objects.equals(word, game.getAnswer())) {
                     writer.println(TimeLog.getDateTime() + ": Игрок отгадал слово: " + word);
+                    System.out.println("Вы выиграли, правильный ответ: " + word);
                     break;
                 }
 
                 if (word.isEmpty()) {
-                    System.out.println(game.getHint());
+                    String hint = game.getHint();
+                    if (hint == null) {
+                        writer.println(TimeLog.getDateTime() + ": Ошибка во время поиска подсказки");
+                        throw new NullHintException();
+                    }
+
+                    System.out.println(hint);
                     writer.println(TimeLog.getDateTime() + ": Игрок запросил подсказку. Попыток осталось: " + game.getSteps());
                     continue;
                 }
@@ -62,6 +69,8 @@ public class Wordle {
             }
         } catch (IOException e) {
             System.out.println("Ошибка создания файла логирования");
+        } catch (EmptyDictionaryException | NullHintException e) {
+            System.out.println(e.getMessage());
         }
     }
 }

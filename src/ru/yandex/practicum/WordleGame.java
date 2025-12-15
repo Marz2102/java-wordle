@@ -40,16 +40,7 @@ public class WordleGame {
             return;
         }
 
-        if (!dictionary.contains(word)) {
-            throw new WordNotFoundInDictionary();
-        }
-
-        for (int i = 0; i < word.length(); i++) {
-            if (!(word.charAt(i) >= 'a' && word.charAt(i) <= 'я')) {
-                throw new WordNotFoundInDictionary();
-            }
-        }
-        if (word.length() != answer.length()) {
+        if (!dictionary.contains(word) || word.length() != answer.length() || !word.matches("^[а-я]+$")) {
             throw new WordNotFoundInDictionary();
         }
     }
@@ -59,6 +50,7 @@ public class WordleGame {
         if (letters.isEmpty()) {
             return dictionary.getRandomWord();
         }
+
         return dictionary.getWordByLetters(letters, wordsPosition, hints);
     }
 
